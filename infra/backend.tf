@@ -17,7 +17,6 @@
 
 terraform {
   backend "pg" {
-    conn_str    = var.supabase_state_conn_str
     schema_name = "tofu_state"
   }
 }

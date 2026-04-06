@@ -92,7 +92,6 @@ jobs:
           TF_VAR_region: ${{ env.REGION }}
           TF_VAR_docker_image: ${{ env.IMAGE_TAG }}
           TF_VAR_supabase_database_url: ${{ secrets.DATABASE_URL }}
-          TF_VAR_supabase_state_conn_str: ${{ secrets.SUPABASE_STATE_CONN_STR }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
           TF_VAR_cookie_secret: ${{ secrets.COOKIE_SECRET }}
           TF_VAR_client_encryption_key: ${{ secrets.CLIENT_ENCRYPTION_KEY }}
@@ -110,7 +109,6 @@ jobs:
           TF_VAR_region: ${{ env.REGION }}
           TF_VAR_docker_image: ${{ env.IMAGE_TAG }}
           TF_VAR_supabase_database_url: ${{ secrets.DATABASE_URL }}
-          TF_VAR_supabase_state_conn_str: ${{ secrets.SUPABASE_STATE_CONN_STR }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
           TF_VAR_cookie_secret: ${{ secrets.COOKIE_SECRET }}
           TF_VAR_client_encryption_key: ${{ secrets.CLIENT_ENCRYPTION_KEY }}

@@ -21,12 +21,6 @@ variable "supabase_database_url" {
   sensitive   = true
 }
 
-variable "supabase_state_conn_str" {
-  description = "Supabase Postgres connection string for OpenTofu state backend"
-  type        = string
-  sensitive   = true
-}
-
 variable "jwt_secret" {
   description = "JWT secret for Medusa authentication"
   type        = string
