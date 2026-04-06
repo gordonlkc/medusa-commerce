@@ -1,0 +1,126 @@
+name: Build & Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  REPOSITORY: "medusa-commerce-repo"
+  SERVICE_NAME: "medusa-commerce"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    name: Build, Push, Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- Authenticate to GCP via OIDC ---
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      # --- Configure Docker for Artifact Registry ---
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # --- Build Docker Image ---
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          docker build \
+            -f docker/Dockerfile \
+            -t "$IMAGE_TAG" \
+            .
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+
+      # --- Push to Artifact Registry ---
+      - name: Push Docker image
+        run: docker push "$IMAGE_TAG"
+
+      # --- Install OpenTofu ---
+      - name: Install OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.8.x
+
+      # --- OpenTofu Init ---
+      - name: OpenTofu Init
+        working-directory: infra
+        run: |
+          tofu init \
+            -backend-config="conn_str=${{ secrets.SUPABASE_STATE_CONN_STR }}" \
+            -input=false
+
+      # --- OpenTofu Plan ---
+      - name: OpenTofu Plan
+        working-directory: infra
+        env:
+          TF_VAR_project_id: ${{ env.PROJECT_ID }}
+          TF_VAR_region: ${{ env.REGION }}
+          TF_VAR_docker_image: ${{ env.IMAGE_TAG }}
+          TF_VAR_supabase_database_url: ${{ secrets.DATABASE_URL }}
+          TF_VAR_supabase_state_conn_str: ${{ secrets.SUPABASE_STATE_CONN_STR }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_cookie_secret: ${{ secrets.COOKIE_SECRET }}
+          TF_VAR_client_encryption_key: ${{ secrets.CLIENT_ENCRYPTION_KEY }}
+          TF_VAR_stripe_api_key: ${{ secrets.STRIPE_API_KEY }}
+          TF_VAR_stripe_webhook_secret: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          TF_VAR_stripe_publishable_key: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
+        run: tofu plan -input=false -out=tfplan
+
+      # --- OpenTofu Apply ---
+      - name: OpenTofu Apply
+        working-directory: infra
+        env:
+          TF_VAR_project_id: ${{ env.PROJECT_ID }}
+          TF_VAR_region: ${{ env.REGION }}
+          TF_VAR_docker_image: ${{ env.IMAGE_TAG }}
+          TF_VAR_supabase_database_url: ${{ secrets.DATABASE_URL }}
+          TF_VAR_supabase_state_conn_str: ${{ secrets.SUPABASE_STATE_CONN_STR }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_cookie_secret: ${{ secrets.COOKIE_SECRET }}
+          TF_VAR_client_encryption_key: ${{ secrets.CLIENT_ENCRYPTION_KEY }}
+          TF_VAR_stripe_api_key: ${{ secrets.STRIPE_API_KEY }}
+          TF_VAR_stripe_webhook_secret: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          TF_VAR_stripe_publishable_key: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
+        run: tofu apply -input=false -auto-approve tfplan
+
+      # --- Output deployment URL ---
+      - name: Get Cloud Run URL
+        working-directory: infra
+        run: |
+          SERVICE_URL=$(tofu output -raw cloud_run_uri 2>/dev/null || echo "Deployed successfully")
+          echo "### Deployed to: $SERVICE_URL" >> "$GITHUB_STEP_SUMMARY"

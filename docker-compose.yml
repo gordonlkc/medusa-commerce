@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: medusa-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: medusa
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - medusa-network
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: medusa-app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/medusa?sslmode=disable
+      - JWT_SECRET=super-secret-jwt-key-for-local-dev-only-do-not-use-in-production
+      - COOKIE_SECRET=super-secret-cookie-key-for-local-dev-only-do-not-use-in-production
+      - CLIENT_ENCRYPTION_KEY=super-secret-encryption-key-for-local-dev-only
+      - ADMIN_CORS=http://localhost:8080,http://localhost:9000,http://localhost:7001
+      - AUTH_CORS=http://localhost:8080,http://localhost:9000,http://localhost:7001
+      - STORE_CORS=http://localhost:8080,http://localhost:8000,http://localhost:7001
+      - HTTP_SERVE_STATIC_FILES=true
+      - NODE_ENV=production
+      - PORT=9000
+      # Next.js middleware runtime vars
+      - MEDUSA_BACKEND_URL=http://localhost:8080
+      - NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_2da11164e3157d1443acb4cafb635ee47be3d434c0347201d9ca6d5b88270777
+      - NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:8080
+      - NEXT_PUBLIC_BASE_URL=http://localhost:8080
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - medusa-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  medusa-network:
+    driver: bridge

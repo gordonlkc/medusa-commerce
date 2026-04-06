@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Node modules (installed during build)
+**/node_modules
+
+# Environment files (injected at runtime)
+**/.env
+**/.env.local
+**/.env.production
+
+# Infra (not needed in container)
+infra/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+*.md
