@@ -16,6 +16,11 @@ resource "google_artifact_registry_repository" "app" {
   }
 }
 
+import {
+  to = google_artifact_registry_repository.app
+  id = "projects/${var.project_id}/locations/${var.region}/repositories/medusa-commerce-repo"
+}
+
 # ===========================
 # Service Account (least privilege)
 # ===========================
@@ -23,6 +28,11 @@ resource "google_service_account" "cloud_run" {
   account_id   = "medusa-commerce-sa"
   display_name = "Service account for medusa-commerce Cloud Run"
   description  = "Minimal service account for Medusa + Next.js on Cloud Run"
+}
+
+import {
+  to = google_service_account.cloud_run
+  id = "projects/${var.project_id}/serviceAccounts/medusa-commerce-sa@${var.project_id}.iam.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "cloud_run_logging" {
