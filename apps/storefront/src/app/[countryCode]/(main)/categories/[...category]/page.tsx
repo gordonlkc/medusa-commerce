@@ -1,5 +1,6 @@
 import { Metadata } from "next"
-export const dynamicParams = trueimport { notFound } from "next/navigation"
+export const dynamicParams = true
+import { notFound } from "next/navigation"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"

@@ -1,5 +1,6 @@
 import { Metadata } from "next"
-export const dynamicParams = trueimport { notFound } from "next/navigation"
+export const dynamicParams = true
+import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
