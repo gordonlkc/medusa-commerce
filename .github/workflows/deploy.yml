@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # --- Authenticate to GCP via OIDC ---
       - name: Authenticate to Google Cloud
