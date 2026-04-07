@@ -70,7 +70,7 @@ resource "google_cloud_run_v2_service" "app" {
 
       ports {
         container_port = 8080
-        name           = "http"
+        name           = "http1"
       }
 
       resources {
