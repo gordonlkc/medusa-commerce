@@ -30,11 +30,6 @@ resource "google_service_account" "cloud_run" {
   description  = "Minimal service account for Medusa + Next.js on Cloud Run"
 }
 
-import {
-  to = google_service_account.cloud_run
-  id = "projects/${var.project_id}/serviceAccounts/medusa-commerce-sa@${var.project_id}.iam.gserviceaccount.com"
-}
-
 resource "google_project_iam_member" "cloud_run_logging" {
   project = var.project_id
   role    = "roles/logging.logWriter"
