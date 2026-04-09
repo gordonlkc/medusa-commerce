@@ -142,10 +142,10 @@ resource "google_cloud_run_v2_service" "app" {
           path = "/health"
           port = 8080
         }
-        initial_delay_seconds = 30
-        timeout_seconds       = 10
-        period_seconds        = 15
-        failure_threshold     = 12
+        initial_delay_seconds = 10
+        timeout_seconds       = 5
+        period_seconds        = 30
+        failure_threshold     = 20
       }
 
       liveness_probe {
@@ -153,7 +153,7 @@ resource "google_cloud_run_v2_service" "app" {
           path = "/health"
           port = 8080
         }
-        initial_delay_seconds = 30
+        initial_delay_seconds = 10
         timeout_seconds       = 5
         period_seconds        = 15
         failure_threshold     = 3
