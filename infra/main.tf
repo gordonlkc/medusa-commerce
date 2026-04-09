@@ -58,9 +58,10 @@ resource "google_project_iam_member" "artifact_registry_reader" {
 # Cloud Run Service
 # ===========================
 resource "google_cloud_run_v2_service" "app" {
-  name     = "medusa-commerce"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name                = "medusa-commerce"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = false
 
   template {
     service_account = google_service_account.cloud_run.email
