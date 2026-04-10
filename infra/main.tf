@@ -137,6 +137,10 @@ resource "google_cloud_run_v2_service" "app" {
         name  = "HTTP_SERVE_STATIC_FILES"
         value = "true"
       }
+      env {
+        name  = "DB_PASSWORD"
+        value = var.db_password
+      }
 
       startup_probe {
         http_get {

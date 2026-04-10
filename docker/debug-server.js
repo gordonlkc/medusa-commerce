@@ -16,14 +16,9 @@ function run(cmd, opts = {}) {
   }
 }
 
-function extractUrlPart(url, pattern) {
-  try {
-    const re = new RegExp(pattern);
-    const m = url.match(re);
-    return m ? m[1] : null;
-  } catch {
-    return null;
-  }
+function extractFromUrl(url, pattern) {
+  const m = String(url).match(new RegExp(pattern));
+  return m ? m[1] : null;
 }
 
 const server = http.createServer((req, res) => {
@@ -32,17 +27,18 @@ const server = http.createServer((req, res) => {
 
   if (req.url === '/db-status') {
     const dbUrl = process.env.DATABASE_URL || '';
-    const dbHost = extractUrlPart(dbUrl, '@([^:/]+)');
-    const dbPort = extractUrlPart(dbUrl, ':(\\d{2,5})/') || '5432';
-    const dbName = extractUrlPart(dbUrl, '/([^/?]+)') || 'postgres';
-
-    const pgPassword = process.env.PGPASSWORD || '';
+    const dbHost = extractFromUrl(dbUrl, '@([^:/]+)');
+    const dbPort = extractFromUrl(dbUrl, ':(\\d{2,5})/') || '5432';
+    const dbName = extractFromUrl(dbUrl, '/([^/?]+)') || 'postgres';
+    const dbPass = process.env.DB_PASSWORD || '';
+    const pgPassword = dbPass || extractFromUrl(dbUrl, ':([^@]+)@') || '';
 
     const results = {
       timestamp: new Date().toISOString(),
       dbHost,
       dbPort,
       dbName,
+      hasDbPassword: !!dbPass,
       dns: run(`nslookup ${dbHost || ''}`),
       tcp: run(`timeout 3 nc -zv ${dbHost || ''} ${dbPort}`),
       pgReady: run(`pg_isready -h ${dbHost || ''} -p ${dbPort} -U postgres -d ${dbName}`),

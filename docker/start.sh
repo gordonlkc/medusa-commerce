@@ -9,10 +9,9 @@ DB_URL="$DATABASE_URL"
 DB_HOST=$(echo "$DB_URL" | sed -E 's|.*@([^:/]+).*|\1|')
 DB_PORT=$(echo "$DB_URL" | sed -E 's|.*@[^:]+:([0-9]+).*|\1|')
 DB_NAME=$(echo "$DB_URL" | sed -E 's|.*/([^?]+)(\?.*)?|\1|')
-DB_PASS=$(echo "$DB_URL" | sed -E 's|.*:([^@]+)@.*|\1|')
 DB_PORT="${DB_PORT:-5432}"
 
-export PGPASSWORD="$DB_PASS"
+export PGPASSWORD="$DB_PASSWORD"
 
 echo "[start.sh] DB host: $DB_HOST"
 echo "[start.sh] DB port: $DB_PORT"

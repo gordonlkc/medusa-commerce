@@ -56,6 +56,12 @@ variable "stripe_publishable_key" {
   type        = string
 }
 
+variable "db_password" {
+  description = "Database password for Supabase (used for pre-flight checks)"
+  type        = string
+  sensitive   = true
+}
+
 variable "min_instances" {
   description = "Minimum Cloud Run instances (0 = scale to zero)"
   type        = number
