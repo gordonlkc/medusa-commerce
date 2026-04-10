@@ -164,6 +164,12 @@ const server = http.createServer(async (req, res) => {
         ]);
         results.regions = regions.rows;
 
+        const regionCountry = await Promise.race([
+          client.query('SELECT * FROM region_country'),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+        ]);
+        results.regionCountry = regionCountry.rows;
+
         if (regions.rows.length === 0) {
           const regionId = 'reg_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
           await client.query(
@@ -208,6 +214,22 @@ const server = http.createServer(async (req, res) => {
             [inviteId, userId]
           );
           results.created = { regionId, userId, email: 'admin@medusa.local', password: 'medusa-admin123' };
+        } else {
+          // Add US country to existing region
+          const regionId = regions.rows[0].id;
+          const existingLink = await Promise.race([
+            client.query('SELECT * FROM region_country WHERE region_id = $1', [regionId]),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+          ]);
+          if (existingLink.rows.length === 0) {
+            await client.query(
+              `INSERT INTO region_country (region_id, iso_2, created_at, updated_at) 
+               VALUES ($1, 'us', NOW(), NOW())`,
+              [regionId]
+            );
+            results.countryAdded = true;
+          }
+        }
         }
 
         client.end();
