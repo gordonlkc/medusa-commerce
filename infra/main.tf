@@ -118,6 +118,10 @@ resource "google_cloud_run_v2_service" "app" {
         value = "https://${var.domain_name}"
       }
       env {
+        name  = "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY"
+        value = var.medusa_publishable_key
+      }
+      env {
         name  = "NODE_ENV"
         value = "production"
       }

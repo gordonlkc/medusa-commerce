@@ -56,6 +56,11 @@ variable "stripe_publishable_key" {
   type        = string
 }
 
+variable "medusa_publishable_key" {
+  description = "Medusa publishable API key"
+  type        = string
+}
+
 variable "db_password" {
   description = "Database password for Supabase (used for pre-flight checks)"
   type        = string
