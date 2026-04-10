@@ -110,10 +110,6 @@ resource "google_cloud_run_v2_service" "app" {
         value = var.stripe_publishable_key
       }
       env {
-        name  = "NEXT_PUBLIC_MEDUSA_BACKEND_URL"
-        value = "http://localhost:8080"
-      }
-      env {
         name  = "NEXT_PUBLIC_BASE_URL"
         value = "https://${var.domain_name}"
       }
