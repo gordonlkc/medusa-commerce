@@ -172,8 +172,8 @@ const server = http.createServer(async (req, res) => {
             [regionId]
           );
           await client.query(
-            `INSERT INTO region_country (region_id, country_id, created_at, updated_at) 
-             SELECT $1, id, NOW(), NOW() FROM country WHERE iso_2 = 'us' LIMIT 1`,
+            `INSERT INTO region_country (region_id, iso_2, created_at, updated_at) 
+             VALUES ($1, 'us', NOW(), NOW())`,
             [regionId]
           );
           const fsId = 'fset_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
