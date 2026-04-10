@@ -40,6 +40,26 @@ async function testPgClient(config) {
   }
 }
 
+async function querySchema(config) {
+  if (!pg) return { ok: false, data: 'pg module not available' };
+  const client = new pg.Client(config);
+  try {
+    await Promise.race([
+      client.connect(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+    ]);
+    const regions = await Promise.race([
+      client.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'region_country'"),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+    ]);
+    client.end();
+    return { ok: true, data: regions.rows };
+  } catch (e) {
+    try { client.end(); } catch(_) {}
+    return { ok: false, data: e.message };
+  }
+}
+
 async function queryApiKeys(config) {
   if (!pg) return { ok: false, data: 'pg module not available' };
   const client = new pg.Client(config);
@@ -101,6 +121,7 @@ const server = http.createServer(async (req, res) => {
       pgClient: await testPgClient(pgConfig),
       pgClientSupavisorUser: await testPgClient({ ...pgConfig, user: `postgres.lskfndrxkjcaetkvgcco` }),
       medusaApiKeys: await queryApiKeys(pgConfig),
+      schema: await querySchema(pgConfig),
       startupLogs: {
         dns: existsSync('/tmp/startup_dns.log') ? readFileSync('/tmp/startup_dns.log', 'utf8').slice(0, 500) : 'N/A',
         nc: existsSync('/tmp/startup_nc.log') ? readFileSync('/tmp/startup_nc.log', 'utf8').slice(0, 500) : 'N/A',
