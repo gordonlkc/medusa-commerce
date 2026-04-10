@@ -3,6 +3,9 @@
 # ============================================================
 FROM node:22-alpine AS storefront-builder
 
+ARG NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app/storefront
@@ -17,7 +20,6 @@ RUN yarn install
 # Copy source and build
 COPY apps/storefront/ ./
 ENV NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:8080
-ENV NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_90eb97919d88b10eadd33cedf228554c0644a158fd34bceabb5950bd113d6915
 ENV NODE_ENV=production
 RUN yarn build
 
