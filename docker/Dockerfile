@@ -19,7 +19,7 @@ RUN yarn install
 
 # Copy source and build
 COPY apps/storefront/ ./
-ENV MEDUSA_BACKEND_URL=http://localhost:8080
+ENV NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:8080
 ENV NODE_ENV=production
 RUN yarn build
 
