@@ -178,8 +178,8 @@ const server = http.createServer(async (req, res) => {
             [regionId]
           );
           await client.query(
-            `INSERT INTO region_country (region_id, iso_2, created_at, updated_at) 
-             VALUES ($1, 'us', NOW(), NOW())`,
+            `INSERT INTO region_country (region_id, iso_2, iso_3, num_code, name, display_name, created_at, updated_at) 
+             VALUES ($1, 'us', 'USA', 840, 'United States', 'United States', NOW(), NOW())`,
             [regionId]
           );
           const fsId = 'fset_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
@@ -223,8 +223,8 @@ const server = http.createServer(async (req, res) => {
           ]);
           if (existingLink.rows.length === 0) {
             await client.query(
-              `INSERT INTO region_country (region_id, iso_2, created_at, updated_at) 
-               VALUES ($1, 'us', NOW(), NOW())`,
+              `INSERT INTO region_country (region_id, iso_2, iso_3, num_code, name, display_name, created_at, updated_at) 
+               VALUES ($1, 'us', 'USA', 840, 'United States', 'United States', NOW(), NOW())`,
               [regionId]
             );
             results.countryAdded = true;
