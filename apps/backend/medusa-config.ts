@@ -9,7 +9,7 @@ module.exports = defineConfig({
       pool: {
         min: 0,
         max: 5,
-        acquireTimeoutMillis: 15000,
+        acquireTimeoutMillis: 30000,
       },
     },
     http: {

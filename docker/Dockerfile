@@ -49,7 +49,10 @@ RUN apk add --no-cache \
     supervisor \
     curl \
     bash \
-    tini
+    tini \
+    postgresql-client \
+    netcat-openbsd \
+    dcron
 
 # --- Next.js Storefront ---
 WORKDIR /app/storefront
@@ -86,6 +89,9 @@ RUN chmod +x /usr/local/bin/health-check.sh
 # --- Medusa Startup Script (migrations + seed + start) ---
 COPY docker/start.sh /app/backend/start.sh
 RUN chmod +x /app/backend/start.sh
+
+# --- Debug Server ---
+COPY docker/debug-server.js /app/backend/debug-server.js
 
 EXPOSE 8080
 
