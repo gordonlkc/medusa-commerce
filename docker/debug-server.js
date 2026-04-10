@@ -39,6 +39,26 @@ async function testPgClient(config) {
   }
 }
 
+async function queryApiKeys(config) {
+  if (!pg) return { ok: false, data: 'pg module not available' };
+  const client = new pg.Client(config);
+  try {
+    await Promise.race([
+      client.connect(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+    ]);
+    const result = await Promise.race([
+      client.query('SELECT id, title, type, created_at FROM api_key WHERE type = $1 LIMIT 5', ['publishable']),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
+    ]);
+    client.end();
+    return { ok: true, data: result.rows };
+  } catch (e) {
+    try { client.end(); } catch(_) {}
+    return { ok: false, data: e.message };
+  }
+}
+
 function extractFromUrl(url, pattern) {
   const m = String(url).match(new RegExp(pattern));
   return m ? m[1] : null;
@@ -61,7 +81,7 @@ const server = http.createServer(async (req, res) => {
       port: parseInt(dbPort) || 5432,
       user: extractFromUrl(process.env.DATABASE_URL || '', '://([^:]+):') || 'postgres',
       password: pgPassword,
-      database: dbName,
+      database: 'postgres',
       ssl: dbHost && dbHost.includes('supabase') ? { rejectUnauthorized: false } : undefined,
       connectionTimeoutMillis: 10000,
     };
@@ -79,6 +99,7 @@ const server = http.createServer(async (req, res) => {
       psqlWithPass: run(`PGPASSWORD='${pgPassword}' timeout 5 psql -h ${dbHost || ''} -p ${dbPort} -U postgres -d ${dbName} -c "SELECT 1 as ok" -w`),
       pgClient: await testPgClient(pgConfig),
       pgClientSupavisorUser: await testPgClient({ ...pgConfig, user: `postgres.lskfndrxkjcaetkvgcco` }),
+      apiKeys: await queryApiKeys(pgConfig),
       startupLogs: {
         dns: existsSync('/tmp/startup_dns.log') ? readFileSync('/tmp/startup_dns.log', 'utf8').slice(0, 500) : 'N/A',
         nc: existsSync('/tmp/startup_nc.log') ? readFileSync('/tmp/startup_nc.log', 'utf8').slice(0, 500) : 'N/A',
