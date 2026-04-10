@@ -8,9 +8,8 @@ module.exports = defineConfig({
     databaseDriverOptions: {
       pool: {
         min: 0,
-        max: 2,
-        idleTimeoutMillis: 30000,
-        acquireTimeoutMillis: 60000,
+        max: 5,
+        acquireTimeoutMillis: 15000,
       },
     },
     http: {
