@@ -51,8 +51,16 @@ async function queryApiKeys(config) {
       client.query('SELECT id, title, type, created_at FROM api_key WHERE type = $1 LIMIT 5', ['publishable']),
       new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
     ]);
+    const links = await Promise.race([
+      client.query('SELECT * FROM publishable_api_key_sales_channel LIMIT 5'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
+    ]);
+    const channels = await Promise.race([
+      client.query('SELECT id, name FROM sales_channel LIMIT 5'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
+    ]);
     client.end();
-    return { ok: true, data: result.rows };
+    return { ok: true, data: { keys: result.rows, links: links.rows, channels: channels.rows } };
   } catch (e) {
     try { client.end(); } catch(_) {}
     return { ok: false, data: e.message };
