@@ -48,12 +48,16 @@ async function querySchema(config) {
       client.connect(),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
     ]);
-    const regions = await Promise.race([
+    const columns = await Promise.race([
       client.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'region_country'"),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
     ]);
+    const pk = await Promise.race([
+      client.query("SELECT column_name FROM information_schema.key_column_usage WHERE table_name = 'region_country' AND constraint_name LIKE '%pkey'"),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+    ]);
     client.end();
-    return { ok: true, data: regions.rows };
+    return { ok: true, data: { columns: columns.rows, pk: pk.rows } };
   } catch (e) {
     try { client.end(); } catch(_) {}
     return { ok: false, data: e.message };
@@ -229,9 +233,9 @@ const server = http.createServer(async (req, res) => {
             );
             results.countryAdded = true;
           } else {
-            // Fix existing entry with null iso_3
+            // Update existing entry with null iso_3
             await client.query(
-              `UPDATE region_country SET iso_2 = 'us', iso_3 = 'USA', num_code = 840, name = 'United States', display_name = 'United States' WHERE region_id = $1`,
+              `UPDATE region_country SET iso_3 = 'USA', num_code = 840, name = 'United States', display_name = 'United States', metadata = '{}' WHERE region_id = $1`,
               [regionId]
             );
             results.countryFixed = true;
