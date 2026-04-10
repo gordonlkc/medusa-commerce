@@ -2,5 +2,4 @@
 set -e
 
 echo "Starting Medusa server..."
-cd /app/backend/.medusa/server
-exec node ./index.js
+exec node ./node_modules/@medusajs/cli/dist/index.js start
