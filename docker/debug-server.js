@@ -228,6 +228,13 @@ const server = http.createServer(async (req, res) => {
               [regionId]
             );
             results.countryAdded = true;
+          } else {
+            // Fix existing entry with null iso_3
+            await client.query(
+              `UPDATE region_country SET iso_2 = 'us', iso_3 = 'USA', num_code = 840, name = 'United States', display_name = 'United States' WHERE region_id = $1`,
+              [regionId]
+            );
+            results.countryFixed = true;
           }
         }
 
