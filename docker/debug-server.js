@@ -48,19 +48,11 @@ async function queryApiKeys(config) {
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
     ]);
     const result = await Promise.race([
-      client.query('SELECT id, title, type, created_at FROM api_key WHERE type = $1 LIMIT 5', ['publishable']),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
-    ]);
-    const links = await Promise.race([
-      client.query('SELECT * FROM publishable_api_key_sales_channel LIMIT 5'),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
-    ]);
-    const channels = await Promise.race([
-      client.query('SELECT id, name FROM sales_channel LIMIT 5'),
+      client.query('SELECT id, title, type, token, created_at FROM api_key WHERE type = $1 LIMIT 5', ['publishable']),
       new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), 10000))
     ]);
     client.end();
-    return { ok: true, data: { keys: result.rows, links: links.rows, channels: channels.rows } };
+    return { ok: true, data: result.rows };
   } catch (e) {
     try { client.end(); } catch(_) {}
     return { ok: false, data: e.message };
@@ -107,7 +99,7 @@ const server = http.createServer(async (req, res) => {
       psqlWithPass: run(`PGPASSWORD='${pgPassword}' timeout 5 psql -h ${dbHost || ''} -p ${dbPort} -U postgres -d ${dbName} -c "SELECT 1 as ok" -w`),
       pgClient: await testPgClient(pgConfig),
       pgClientSupavisorUser: await testPgClient({ ...pgConfig, user: `postgres.lskfndrxkjcaetkvgcco` }),
-      apiKeys: await queryApiKeys(pgConfig),
+      medusaApiKeys: await queryApiKeys(pgConfig),
       startupLogs: {
         dns: existsSync('/tmp/startup_dns.log') ? readFileSync('/tmp/startup_dns.log', 'utf8').slice(0, 500) : 'N/A',
         nc: existsSync('/tmp/startup_nc.log') ? readFileSync('/tmp/startup_nc.log', 'utf8').slice(0, 500) : 'N/A',
