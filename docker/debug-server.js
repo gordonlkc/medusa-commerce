@@ -5,8 +5,6 @@ const crypto = require('crypto');
 
 let pg = null;
 try { pg = require('pg'); } catch(e) {}
-let bcrypt = null;
-try { bcrypt = require('bcryptjs'); } catch(e) {}
 
 const PORT = 9001;
 
@@ -130,7 +128,6 @@ const server = http.createServer(async (req, res) => {
 
     async function setupStore() {
       if (!pg) return { ok: false, data: 'pg module not available' };
-      if (!bcrypt) return { ok: false, data: 'bcryptjs not available' };
       const client = new pg.Client(pgConfig);
       try {
         await Promise.race([
@@ -176,12 +173,12 @@ const server = http.createServer(async (req, res) => {
              VALUES ($1, 'Default', 'default', NOW(), NOW())`,
             [spId]
           );
-          const hashedPassword = await bcrypt.hash('medusa-admin123', 10);
+          const hash = crypto.createHash('sha256').update('medusa-admin123').digest('hex');
           const userId = 'user_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
           await client.query(
             `INSERT INTO user (id, email, password_hash, first_name, last_name, created_at, updated_at, metadata) 
              VALUES ($1, 'admin@medusa.local', $2, 'Admin', 'User', NOW(), NOW(), '{}')`,
-            [userId, hashedPassword]
+            [userId, hash]
           );
           const inviteId = 'inv_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
           await client.query(
