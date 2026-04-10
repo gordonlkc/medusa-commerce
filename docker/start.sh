@@ -47,7 +47,11 @@ else
 fi
 
 echo "[start.sh] --- Starting Medusa CLI ---"
-node ./node_modules/@medusajs/cli/dist/index.js start 2>&1 &
+
+# Start medusa with output captured to a file AND stdout
+node ./node_modules/@medusajs/cli/dist/index.js start \
+    > /tmp/medusa_stdout.log \
+    2>&1 &
 MEDUSA_PID=$!
 
 echo "[start.sh] Medusa CLI PID: $MEDUSA_PID"
@@ -56,17 +60,22 @@ echo "[start.sh] Waiting for server on port 9000 (max 300s)..."
 for i in $(seq 1 300); do
     if curl -sf --max-time 2 http://127.0.0.1:9000/health > /dev/null 2>&1; then
         echo "[start.sh] SUCCESS: Medusa ready on port 9000 after ${i}s"
+        echo "[start.sh] --- Medusa startup output ---"
+        cat /tmp/medusa_stdout.log
         break
     fi
     if ! kill -0 $MEDUSA_PID 2>/dev/null; then
         echo "[start.sh] ERROR: Medusa process died at ${i}s"
-        echo "[start.sh] --- Startup logs ---"
-        for f in /tmp/startup_*.log; do
-            [ -f "$f" ] && echo "[start.sh] === $f ===" && cat "$f"
-        done
+        echo "[start.sh] --- Medusa stdout ---"
+        cat /tmp/medusa_stdout.log
         break
     fi
-    if [ $((i % 15)) -eq 0 ]; then
+    if [ $((i % 5)) -eq 0 ]; then
+        # Every 5s: check if medusa has produced any output
+        if [ -s /tmp/medusa_stdout.log ]; then
+            echo "[start.sh] Medusa output so far (${i}s):"
+            tail -5 /tmp/medusa_stdout.log | sed 's/^/[start.sh] /'
+        fi
         echo "[start.sh] Still waiting... ${i}s (DB: $DB_HOST:$DB_PORT)"
     fi
     sleep 1

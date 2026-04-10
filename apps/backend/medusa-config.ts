@@ -6,6 +6,8 @@ module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     databaseDriverOptions: {
+      connectionTimeoutMillis: 30000,
+      keepAliveInitialDelayMillis: 10000,
       pool: {
         min: 0,
         max: 5,
