@@ -1,9 +1,12 @@
 const http = require('http');
 const { execSync } = require('child_process');
 const { readFileSync, existsSync } = require('fs');
+const crypto = require('crypto');
 
 let pg = null;
 try { pg = require('pg'); } catch(e) {}
+let bcrypt = null;
+try { bcrypt = require('bcryptjs'); } catch(e) {}
 
 const PORT = 9001;
 
@@ -108,9 +111,104 @@ const server = http.createServer(async (req, res) => {
       },
     };
     res.end(JSON.stringify(results, null, 2));
+  } else if (req.url === '/setup-store' && req.method === 'POST') {
+    const dbUrl = process.env.DATABASE_URL || '';
+    const dbHost = extractFromUrl(dbUrl, '@([^:/]+)');
+    const dbPort = extractFromUrl(dbUrl, ':(\\d{2,5})/') || '5432';
+    const dbPass = process.env.DB_PASSWORD || '';
+    const pgPassword = dbPass || extractFromUrl(dbUrl, ':([^@]+)@') || '';
+
+    const pgConfig = {
+      host: dbHost,
+      port: parseInt(dbPort) || 5432,
+      user: extractFromUrl(dbUrl, '://([^:]+):') || 'postgres',
+      password: pgPassword,
+      database: 'postgres',
+      ssl: dbHost && dbHost.includes('supabase') ? { rejectUnauthorized: false } : undefined,
+      connectionTimeoutMillis: 10000,
+    };
+
+    async function setupStore() {
+      if (!pg) return { ok: false, data: 'pg module not available' };
+      if (!bcrypt) return { ok: false, data: 'bcryptjs not available' };
+      const client = new pg.Client(pgConfig);
+      try {
+        await Promise.race([
+          client.connect(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+        ]);
+
+        const results = {};
+
+        const regions = await Promise.race([
+          client.query('SELECT id, name, currency_code FROM region'),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+        ]);
+        results.regions = regions.rows;
+
+        if (regions.rows.length === 0) {
+          const regionId = 'reg_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
+          await client.query(
+            `INSERT INTO region (id, name, currency_code, created_at, updated_at) 
+             VALUES ($1, 'United States', 'usd', NOW(), NOW())`,
+            [regionId]
+          );
+          await client.query(
+            `INSERT INTO region_country (region_id, country_id, created_at, updated_at) 
+             SELECT $1, id, NOW(), NOW() FROM country WHERE iso_2 = 'us' LIMIT 1`,
+            [regionId]
+          );
+          const fsId = 'fset_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
+          await client.query(
+            `INSERT INTO fulfillment_set (id, name, type, created_at, updated_at) 
+             VALUES ($1, 'US delivery', 'shipping', NOW(), NOW())`,
+            [fsId]
+          );
+          const szId = 'szone_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
+          await client.query(
+            `INSERT INTO service_zone (id, name, fulfillment_set_id, created_at, updated_at) 
+             VALUES ($1, 'US', $2, NOW(), NOW())`,
+            [szId, fsId]
+          );
+          const spId = 'sp_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
+          await client.query(
+            `INSERT INTO shipping_profile (id, name, type, created_at, updated_at) 
+             VALUES ($1, 'Default', 'default', NOW(), NOW())`,
+            [spId]
+          );
+          const hashedPassword = await bcrypt.hash('medusa-admin123', 10);
+          const userId = 'user_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
+          await client.query(
+            `INSERT INTO user (id, email, password_hash, first_name, last_name, created_at, updated_at, metadata) 
+             VALUES ($1, 'admin@medusa.local', $2, 'Admin', 'User', NOW(), NOW(), '{}')`,
+            [userId, hashedPassword]
+          );
+          const inviteId = 'inv_' + crypto.randomUUID().replace(/-/g, '').slice(0, 26);
+          await client.query(
+            `INSERT INTO invite (id, email, role, accepted, created_at, updated_at, token, user_id) 
+             VALUES ($1, 'admin@medusa.local', 'admin', true, NOW(), NOW(), 'seed-token', $2)`,
+            [inviteId, userId]
+          );
+          results.created = { regionId, userId, email: 'admin@medusa.local', password: 'medusa-admin123' };
+        }
+
+        client.end();
+        return { ok: true, data: results };
+      } catch (e) {
+        try { client.end(); } catch(_) {}
+        return { ok: false, data: e.message };
+      }
+    }
+
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      const result = await setupStore();
+      res.end(JSON.stringify(result, null, 2));
+    });
   } else {
     res.statusCode = 404;
-    res.end(JSON.stringify({ error: 'Try /db-status' }));
+    res.end(JSON.stringify({ error: 'Try /db-status or POST /setup-store' }));
   }
 });
 
