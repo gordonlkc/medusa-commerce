@@ -229,7 +229,6 @@ const server = http.createServer(async (req, res) => {
           );
           results.countryAdded = true;
         }
-        }
 
         client.end();
         return { ok: true, data: results };
