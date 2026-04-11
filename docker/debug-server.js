@@ -219,12 +219,10 @@ const server = http.createServer(async (req, res) => {
           );
           results.created = { regionId, userId, email: 'admin@medusa.local', password: 'medusa-admin123' };
         } else {
-          // Delete all existing region_country entries and re-add
-          await client.query('DELETE FROM region_country');
+          // Update existing US entry to link to region
           const regionId = regions.rows[0].id;
           await client.query(
-            `INSERT INTO region_country (region_id, iso_2, iso_3, num_code, name, display_name, created_at, updated_at) 
-             VALUES ($1, 'us', 'USA', 840, 'United States', 'United States', NOW(), NOW())`,
+            `UPDATE region_country SET region_id = $1, iso_3 = 'USA', num_code = 840, name = 'UNITED STATES', display_name = 'United States', metadata = '{}' WHERE iso_2 = 'us'`,
             [regionId]
           );
           results.countryAdded = true;
