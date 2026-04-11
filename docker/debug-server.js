@@ -219,27 +219,16 @@ const server = http.createServer(async (req, res) => {
           );
           results.created = { regionId, userId, email: 'admin@medusa.local', password: 'medusa-admin123' };
         } else {
-          // Add US country to existing region
+          // Delete all existing region_country entries and re-add
+          await client.query('DELETE FROM region_country');
           const regionId = regions.rows[0].id;
-          const existingLink = await Promise.race([
-            client.query('SELECT * FROM region_country WHERE region_id = $1', [regionId]),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
-          ]);
-          if (existingLink.rows.length === 0) {
-            await client.query(
-              `INSERT INTO region_country (region_id, iso_2, iso_3, num_code, name, display_name, created_at, updated_at) 
-               VALUES ($1, 'us', 'USA', 840, 'United States', 'United States', NOW(), NOW())`,
-              [regionId]
-            );
-            results.countryAdded = true;
-          } else {
-            // Update existing entry with null iso_3
-            await client.query(
-              `UPDATE region_country SET iso_3 = 'USA', num_code = 840, name = 'United States', display_name = 'United States', metadata = '{}' WHERE region_id = $1`,
-              [regionId]
-            );
-            results.countryFixed = true;
-          }
+          await client.query(
+            `INSERT INTO region_country (region_id, iso_2, iso_3, num_code, name, display_name, created_at, updated_at) 
+             VALUES ($1, 'us', 'USA', 840, 'United States', 'United States', NOW(), NOW())`,
+            [regionId]
+          );
+          results.countryAdded = true;
+        }
         }
 
         client.end();
