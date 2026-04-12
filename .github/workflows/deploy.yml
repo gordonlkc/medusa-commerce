@@ -20,8 +20,10 @@ concurrency:
 env:
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   REGION: ${{ vars.GCP_REGION }}
+  REGION_ID: ${{ vars.GCP_REGION_ID }}
   REPOSITORY: "medusa-commerce-repo"
   SERVICE_NAME: "medusa-commerce"
+  BACKEND_URL: ${{ vars.BACKEND_URL }}
 
 permissions:
   contents: read
@@ -63,6 +65,7 @@ jobs:
           docker build \
             -f docker/Dockerfile \
             --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY="${{ secrets.MEDUSA_PUBLISHABLE_KEY }}" \
+            --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL="${{ env.BACKEND_URL }}" \
             -t "$IMAGE_TAG" \
             .
           echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
