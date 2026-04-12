@@ -2,8 +2,18 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@layer base {
+  body {
+    font-family: 'Euclid Circular A', sans-serif;
+    @apply text-body bg-white;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @layer utilities {
-  /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -13,8 +23,8 @@
   }
 
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   input:focus ~ label,
@@ -51,7 +61,31 @@
 
 @layer components {
   .content-container {
-    @apply max-w-[1440px] w-full mx-auto px-6;
+    @apply max-w-[1170px] w-full mx-auto px-4 sm:px-7.5 xl:px-0;
+  }
+
+  .custom-search {
+    @apply w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200;
+  }
+
+  .custom-search:focus {
+    @apply border-blue shadow-input;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 py-2.5 px-7.5 rounded-md font-medium transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-blue text-white hover:bg-blue-dark;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-dark border border-gray-3 hover:border-dark;
+  }
+
+  .section-title {
+    @apply text-heading-4 font-medium text-dark mb-7.5;
   }
 
   .contrast-btn {
