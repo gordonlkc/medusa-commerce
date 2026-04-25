@@ -81,5 +81,22 @@ for i in $(seq 1 300); do
     sleep 1
 done
 
+echo "[start.sh] --- Seeding products if DB is empty ---"
+PRODUCT_COUNT=$(psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM product" 2>/dev/null || echo "0")
+PRODUCT_COUNT=$(echo "$PRODUCT_COUNT" | tr -d '[:space:]')
+
+if [ "$PRODUCT_COUNT" = "0" ]; then
+  echo "[start.sh] No products found. Running seed-products script..."
+  node ./node_modules/@medusajs/cli/dist/index.js exec \
+    ./src/scripts/seed-products.ts \
+    >> /tmp/medusa_stdout.log 2>&1 && \
+    echo "[start.sh] Seed complete." || \
+    echo "[start.sh] Seed failed — check /tmp/medusa_stdout.log"
+  echo "[start.sh] --- Seed output ---"
+  tail -20 /tmp/medusa_stdout.log
+else
+  echo "[start.sh] Products already exist (count=$PRODUCT_COUNT), skipping seed."
+fi
+
 echo "[start.sh] Keeping Medusa alive..."
 wait $MEDUSA_PID
