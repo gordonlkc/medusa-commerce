@@ -63,12 +63,7 @@ export default async function Footer() {
                   </LocalizedClientLink>
                 </li>
                 <li>
-                  <LocalizedClientLink href="/wishlist" className="text-[#6C6F93] text-sm hover:text-[#3C50E0] transition-colors">
-                    Wishlist
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink href="/shop" className="text-[#6C6F93] text-sm hover:text-[#3C50E0] transition-colors">
+                  <LocalizedClientLink href="/store" className="text-[#6C6F93] text-sm hover:text-[#3C50E0] transition-colors">
                     Shop
                   </LocalizedClientLink>
                 </li>

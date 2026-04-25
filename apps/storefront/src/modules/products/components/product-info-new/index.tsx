@@ -198,7 +198,6 @@ export default function ProductInfo({ product, region }: ProductInfoProps) {
           : "Add to Cart"}
       </button>
 
-      <button className="w-full btn btn-secondary">Add to Wishlist</button>
     </div>
   )
 }

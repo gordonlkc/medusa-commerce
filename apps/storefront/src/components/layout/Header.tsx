@@ -43,8 +43,7 @@ export default function Header() {
   }
 
   const navItems = [
-    { label: "Shop", href: "/shop" },
-    { label: "Wishlist", href: "/wishlist" },
+    { label: "Shop", href: "/store" },
     { label: "My Account", href: "/account" },
     { label: "Contact", href: "/contact" },
   ]
@@ -157,11 +156,8 @@ export default function Header() {
             </div>
 
             <div className="flex items-center gap-6">
-              <Link href="/recently-viewed" className="text-sm text-dark-4 hover:text-blue transition-colors">
-                Recently Viewed
-              </Link>
-              <Link href="/wishlist" className="text-sm text-dark-4 hover:text-blue transition-colors">
-                Wishlist
+              <Link href="/store" className="text-sm text-dark-4 hover:text-blue transition-colors">
+                All Products
               </Link>
             </div>
           </div>
@@ -246,18 +242,11 @@ export default function Header() {
 
           <div className="mt-4 pt-4 border-t border-gray-300 flex flex-col gap-2">
             <Link
-              href="/recently-viewed"
+              href="/store"
               className="px-3 py-2 text-dark-4 hover:text-blue hover:bg-gray-1 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Recently Viewed
-            </Link>
-            <Link
-              href="/wishlist"
-              className="px-3 py-2 text-dark-4 hover:text-blue hover:bg-gray-1 rounded-lg transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Wishlist
+              All Products
             </Link>
           </div>
         </div>
