@@ -75,6 +75,7 @@ COPY --from=backend-builder /app/backend/.medusa/server/medusa-config.js ./medus
 # Copy admin build to where Medusa expects it (rootDirectory + "/public/admin")
 COPY --from=backend-builder /app/backend/.medusa/server/public/admin ./public/admin
 COPY --from=backend-builder /app/backend/src ./src
+COPY --from=backend-builder /app/backend/tsconfig.json ./tsconfig.json
 
 # --- Supervisor log directory ---
 RUN mkdir -p /var/log/supervisor /run/nginx

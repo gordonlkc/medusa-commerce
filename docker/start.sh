@@ -89,11 +89,15 @@ if [ "$PRODUCT_COUNT" = "0" ]; then
   echo "[start.sh] No products found. Running seed-products script..."
   node ./node_modules/@medusajs/cli/dist/index.js exec \
     ./src/scripts/seed-products.ts \
-    >> /tmp/medusa_stdout.log 2>&1 && \
-    echo "[start.sh] Seed complete." || \
-    echo "[start.sh] Seed failed — check /tmp/medusa_stdout.log"
+    > /tmp/seed.log 2>&1
+  SEED_EXIT=$?
   echo "[start.sh] --- Seed output ---"
-  tail -20 /tmp/medusa_stdout.log
+  cat /tmp/seed.log
+  if [ $SEED_EXIT -eq 0 ]; then
+    echo "[start.sh] Seed complete."
+  else
+    echo "[start.sh] Seed failed (exit $SEED_EXIT)."
+  fi
 else
   echo "[start.sh] Products already exist (count=$PRODUCT_COUNT), skipping seed."
 fi
