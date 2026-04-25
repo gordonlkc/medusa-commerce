@@ -88,7 +88,7 @@ PRODUCT_COUNT=$(echo "$PRODUCT_COUNT" | tr -d '[:space:]')
 if [ "$PRODUCT_COUNT" = "0" ]; then
   echo "[start.sh] No products found. Running seed-products script..."
   node ./node_modules/@medusajs/cli/dist/index.js exec \
-    ./src/scripts/seed-products.ts \
+    ./.medusa/server/scripts/seed-products.js \
     > /tmp/seed.log 2>&1
   SEED_EXIT=$?
   echo "[start.sh] --- Seed output ---"

@@ -41,6 +41,12 @@ RUN yarn install
 # Copy source
 COPY apps/backend/ ./
 RUN yarn build
+# Compile seed scripts (medusa build omits src/scripts/)
+RUN node_modules/.bin/tsc src/scripts/seed-products.ts \
+    --outDir .medusa/server/scripts \
+    --module commonjs --target es2020 \
+    --esModuleInterop --skipLibCheck \
+    --moduleResolution node || true
 
 # ============================================================
 # Stage 3: Final Runtime — Nginx + Supervisor + Both Apps
